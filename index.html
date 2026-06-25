@@ -1,0 +1,582 @@
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans); }
+  .phone-frame {
+    width: 360px;
+    height: 720px;
+    border-radius: 36px;
+    border: 2.5px solid var(--color-border-primary);
+    overflow: hidden;
+    background: #fff;
+    position: relative;
+    margin: 0 auto;
+    box-shadow: 0 0 0 1px var(--color-border-tertiary);
+  }
+  .screen { display: none; flex-direction: column; height: 100%; }
+  .screen.active { display: flex; }
+  .status-bar {
+    background: #0F6E56;
+    color: white;
+    font-size: 11px;
+    padding: 6px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .app-header {
+    background: #0F6E56;
+    color: white;
+    padding: 14px 20px 18px;
+    flex-shrink: 0;
+  }
+  .app-header .logo-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo-circle {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .app-header h1 { font-size: 17px; font-weight: 500; line-height: 1.2; }
+  .app-header p { font-size: 11px; opacity: 0.8; margin-top: 1px; }
+  .screen-body { flex: 1; overflow-y: auto; background: #F8F7F4; padding: 14px; }
+  .screen-body::-webkit-scrollbar { display: none; }
+  .bottom-nav {
+    background: white;
+    border-top: 0.5px solid var(--color-border-tertiary);
+    display: flex;
+    flex-shrink: 0;
+  }
+  .nav-btn {
+    flex: 1; border: none; background: none; padding: 8px 4px 10px;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    cursor: pointer; color: var(--color-text-tertiary); font-size: 9px; font-family: var(--font-sans);
+    transition: color 0.15s;
+  }
+  .nav-btn i { font-size: 22px; }
+  .nav-btn.active { color: #0F6E56; }
+  .feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .feature-card {
+    background: white;
+    border-radius: 16px;
+    border: 0.5px solid var(--color-border-tertiary);
+    padding: 14px 12px;
+    cursor: pointer;
+    transition: transform 0.12s, border-color 0.12s;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .feature-card:active { transform: scale(0.97); }
+  .feature-card:hover { border-color: var(--color-border-secondary); }
+  .feat-icon {
+    width: 40px; height: 40px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center; font-size: 20px;
+  }
+  .feat-icon.green { background: #E1F5EE; color: #0F6E56; }
+  .feat-icon.blue { background: #E6F1FB; color: #185FA5; }
+  .feat-icon.amber { background: #FAEEDA; color: #854F0B; }
+  .feat-icon.coral { background: #FAECE7; color: #993C1D; }
+  .feat-icon.purple { background: #EEEDFE; color: #534AB7; }
+  .feat-icon.pink { background: #FBEAF0; color: #993556; }
+  .feature-card h3 { font-size: 13px; font-weight: 500; color: var(--color-text-primary); line-height: 1.3; }
+  .feature-card p { font-size: 11px; color: var(--color-text-secondary); line-height: 1.4; }
+  .greeting-card {
+    background: linear-gradient(135deg, #0F6E56 0%, #1D9E75 100%);
+    border-radius: 16px;
+    padding: 16px;
+    color: white;
+    margin-bottom: 14px;
+    position: relative;
+    overflow: hidden;
+  }
+  .greeting-card::after {
+    content: '';
+    position: absolute; right: -10px; top: -10px;
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.08);
+  }
+  .greeting-card h2 { font-size: 15px; font-weight: 500; margin-bottom: 3px; }
+  .greeting-card p { font-size: 12px; opacity: 0.85; }
+  .section-title { font-size: 12px; font-weight: 500; color: var(--color-text-secondary); letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 10px; margin-top: 4px; }
+
+  .back-btn {
+    background: none; border: none; color: white; cursor: pointer;
+    display: flex; align-items: center; gap: 6px; font-size: 13px; font-family: var(--font-sans);
+    padding: 0; margin-bottom: 10px;
+  }
+
+  .voice-screen-body {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: #F8F7F4; padding: 20px;
+  }
+  .mic-outer {
+    width: 120px; height: 120px; border-radius: 50%;
+    background: #E1F5EE;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: transform 0.1s;
+    border: 0.5px solid #9FE1CB;
+  }
+  .mic-outer:active { transform: scale(0.95); }
+  .mic-outer.recording { background: #FAECE7; border-color: #F5C4B3; animation: pulse 1.2s infinite; }
+  @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+  .mic-inner {
+    width: 80px; height: 80px; border-radius: 50%;
+    background: #0F6E56; display: flex; align-items: center; justify-content: center;
+  }
+  .mic-inner.recording { background: #993C1D; }
+  .mic-inner i { font-size: 34px; color: white; }
+  .voice-label { font-size: 15px; color: var(--color-text-secondary); margin-top: 16px; text-align: center; }
+  .voice-response {
+    background: white; border-radius: 14px; border: 0.5px solid var(--color-border-tertiary);
+    padding: 14px; margin-top: 20px; width: 100%; display: none;
+  }
+  .voice-response.show { display: block; }
+  .example-queries { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+  .query-chip {
+    background: white; border: 0.5px solid var(--color-border-secondary); border-radius: 20px;
+    padding: 6px 12px; font-size: 12px; color: var(--color-text-secondary); cursor: pointer;
+  }
+  .query-chip:hover { background: #E1F5EE; border-color: #9FE1CB; color: #085041; }
+
+  .reminder-item {
+    background: white; border-radius: 12px; border: 0.5px solid var(--color-border-tertiary);
+    padding: 12px 14px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px;
+  }
+  .reminder-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .reminder-dot.green { background: #1D9E75; }
+  .reminder-dot.amber { background: #BA7517; }
+  .reminder-dot.red { background: #E24B4A; }
+  .reminder-info { flex: 1; }
+  .reminder-info h4 { font-size: 13px; font-weight: 500; }
+  .reminder-info p { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; }
+  .reminder-time { font-size: 12px; color: var(--color-text-tertiary); font-weight: 500; }
+
+  .emergency-btn {
+    background: #E24B4A; border: none; border-radius: 16px; color: white;
+    width: 100%; padding: 18px; font-size: 15px; font-family: var(--font-sans);
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
+    margin-bottom: 12px; font-weight: 500;
+  }
+  .emergency-btn.secondary { background: #185FA5; }
+  .emergency-btn.tertiary { background: #534AB7; }
+  .family-member {
+    background: white; border-radius: 12px; border: 0.5px solid var(--color-border-tertiary);
+    padding: 12px 14px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px;
+  }
+  .avatar { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 500; flex-shrink: 0; }
+
+  .scam-input-area {
+    background: white; border-radius: 14px; border: 0.5px solid var(--color-border-tertiary);
+    padding: 14px; margin-bottom: 12px;
+  }
+  .scam-input-area textarea {
+    width: 100%; border: none; font-family: var(--font-sans); font-size: 13px;
+    color: var(--color-text-primary); resize: none; outline: none; background: none; line-height: 1.5;
+  }
+  .analyze-btn {
+    width: 100%; background: #0F6E56; border: none; border-radius: 10px; color: white;
+    padding: 13px; font-size: 14px; font-family: var(--font-sans); cursor: pointer; font-weight: 500;
+  }
+  .scam-result {
+    border-radius: 14px; padding: 14px; margin-top: 12px; display: none;
+  }
+  .scam-result.show { display: block; }
+  .scam-result.danger { background: #FCEBEB; border: 0.5px solid #F7C1C1; }
+  .scam-result.safe { background: #EAF3DE; border: 0.5px solid #C0DD97; }
+  .scam-result h4 { font-size: 14px; font-weight: 500; margin-bottom: 6px; }
+  .scam-result.danger h4 { color: #A32D2D; }
+  .scam-result.safe h4 { color: #3B6D11; }
+  .scam-result p { font-size: 12px; line-height: 1.5; }
+  .scam-result.danger p { color: #791F1F; }
+  .scam-result.safe p { color: #27500A; }
+
+  .toast {
+    position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%);
+    background: #2C2C2A; color: white; border-radius: 20px; padding: 10px 18px;
+    font-size: 12px; white-space: nowrap; opacity: 0; transition: opacity 0.3s;
+    pointer-events: none; z-index: 10;
+  }
+  .toast.show { opacity: 1; }
+
+  .plan-card {
+    background: white; border-radius: 14px; border: 0.5px solid var(--color-border-tertiary);
+    padding: 16px; margin-bottom: 10px;
+  }
+  .plan-card.featured { border: 2px solid #0F6E56; }
+  .plan-badge { background: #E1F5EE; color: #085041; font-size: 11px; padding: 3px 10px; border-radius: 20px; display: inline-block; margin-bottom: 10px; }
+  .plan-price { font-size: 24px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 2px; }
+  .plan-price span { font-size: 13px; color: var(--color-text-secondary); font-weight: 400; }
+  .plan-feature { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--color-text-secondary); margin-top: 8px; }
+  .plan-feature i { font-size: 14px; color: #1D9E75; }
+</style>
+
+<div style="padding: 12px 0;">
+<h2 class="sr-only">Jeevana Mitra – interactive mobile app prototype with 5 screens: home, voice assistant, reminders, scam detection, and emergency</h2>
+
+<div class="phone-frame">
+
+  <div id="screen-home" class="screen active">
+    <div class="status-bar"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i class="ti ti-signal-4g" style="font-size:13px"></i><i class="ti ti-wifi" style="font-size:13px"></i><i class="ti ti-battery-2" style="font-size:13px"></i></span></div>
+    <div class="app-header">
+      <div class="logo-row">
+        <div class="logo-circle">🌿</div>
+        <div><h1>జీవన మిత్ర</h1><p>Jeevana Mitra</p></div>
+      </div>
+    </div>
+    <div class="screen-body">
+      <div class="greeting-card">
+        <h2>నమస్కారం! 👋</h2>
+        <p>Today I can help you with reminders, photos, scam detection & more.</p>
+      </div>
+      <p class="section-title">Main Features</p>
+      <div class="feature-grid">
+        <div class="feature-card" onclick="goTo('screen-voice')">
+          <div class="feat-icon green"><i class="ti ti-microphone"></i></div>
+          <h3>Voice Assistant</h3>
+          <p>మాట్లాడండి</p>
+        </div>
+        <div class="feature-card" onclick="goTo('screen-camera')">
+          <div class="feat-icon blue"><i class="ti ti-camera"></i></div>
+          <h3>Camera AI</h3>
+          <p>ఫోటో అడగండి</p>
+        </div>
+        <div class="feature-card" onclick="goTo('screen-reminders')">
+          <div class="feat-icon amber"><i class="ti ti-bell"></i></div>
+          <h3>Reminders</h3>
+          <p>రిమైండర్లు</p>
+        </div>
+        <div class="feature-card" onclick="goTo('screen-scam')">
+          <div class="feat-icon coral"><i class="ti ti-shield-check"></i></div>
+          <h3>Scam Alert</h3>
+          <p>మోసం గుర్తింపు</p>
+        </div>
+        <div class="feature-card" onclick="goTo('screen-emergency')">
+          <div class="feat-icon pink"><i class="ti ti-heart-handshake"></i></div>
+          <h3>Family Safety</h3>
+          <p>కుటుంబ రక్షణ</p>
+        </div>
+        <div class="feature-card" onclick="goTo('screen-plans')">
+          <div class="feat-icon purple"><i class="ti ti-crown"></i></div>
+          <h3>Premium</h3>
+          <p>అన్‌లిమిటెడ్</p>
+        </div>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <button class="nav-btn active"><i class="ti ti-home"></i>Home</button>
+      <button class="nav-btn" onclick="goTo('screen-voice')"><i class="ti ti-microphone"></i>Voice</button>
+      <button class="nav-btn" onclick="goTo('screen-reminders')"><i class="ti ti-bell"></i>Remind</button>
+      <button class="nav-btn" onclick="goTo('screen-emergency')"><i class="ti ti-sos"></i>Safety</button>
+    </div>
+  </div>
+
+  <div id="screen-voice" class="screen">
+    <div class="status-bar"><span>9:41</span><span><i class="ti ti-battery-2" style="font-size:13px"></i></span></div>
+    <div class="app-header">
+      <button class="back-btn" onclick="goTo('screen-home')"><i class="ti ti-arrow-left" style="font-size:16px"></i> Voice Assistant</button>
+      <p style="font-size:11px;opacity:0.8;">నొక్కి మాట్లాడండి</p>
+    </div>
+    <div class="voice-screen-body">
+      <div class="mic-outer" id="micBtn" onclick="toggleRecording()">
+        <div class="mic-inner" id="micInner">
+          <i class="ti ti-microphone" id="micIcon"></i>
+        </div>
+      </div>
+      <p class="voice-label" id="voiceLabel">Tap to speak<br><span style="font-size:12px;color:var(--color-text-tertiary)">మాట్లాడడానికి నొక్కండి</span></p>
+      <div class="example-queries">
+        <div class="query-chip" onclick="simulateQuery('Remind me medicine at 8 PM')">💊 Medicine reminder</div>
+        <div class="query-chip" onclick="simulateQuery('What is my electricity bill?')">⚡ Bill inquiry</div>
+        <div class="query-chip" onclick="simulateQuery('Call my daughter')">📞 Call family</div>
+        <div class="query-chip" onclick="simulateQuery('What is today\'s weather?')">🌤 Weather</div>
+      </div>
+      <div class="voice-response" id="voiceResponse">
+        <p style="font-size:12px;color:var(--color-text-secondary);margin-bottom:6px;">You said:</p>
+        <p style="font-size:13px;font-weight:500;margin-bottom:10px;" id="userSaid"></p>
+        <p style="font-size:12px;color:var(--color-text-secondary);margin-bottom:6px;">జీవన మిత్ర:</p>
+        <p style="font-size:13px;line-height:1.5;" id="assistantReply"></p>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <button class="nav-btn" onclick="goTo('screen-home')"><i class="ti ti-home"></i>Home</button>
+      <button class="nav-btn active"><i class="ti ti-microphone"></i>Voice</button>
+      <button class="nav-btn" onclick="goTo('screen-reminders')"><i class="ti ti-bell"></i>Remind</button>
+      <button class="nav-btn" onclick="goTo('screen-emergency')"><i class="ti ti-sos"></i>Safety</button>
+    </div>
+  </div>
+
+  <div id="screen-camera" class="screen">
+    <div class="status-bar"><span>9:41</span><span><i class="ti ti-battery-2" style="font-size:13px"></i></span></div>
+    <div class="app-header">
+      <button class="back-btn" onclick="goTo('screen-home')"><i class="ti ti-arrow-left" style="font-size:16px"></i> Camera AI</button>
+      <p style="font-size:11px;opacity:0.8;">ఫోటో తీసి అడగండి</p>
+    </div>
+    <div class="screen-body" style="display:flex;flex-direction:column;align-items:center;padding-top:20px;">
+      <div style="width:220px;height:220px;border-radius:20px;border:2px dashed #9FE1CB;background:#E1F5EE;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;cursor:pointer;margin-bottom:20px;" onclick="simulateCamera()">
+        <i class="ti ti-camera" style="font-size:40px;color:#0F6E56;"></i>
+        <p style="font-size:13px;color:#085041;text-align:center;">Tap to take a photo<br>ఫోటో తీయండి</p>
+      </div>
+      <div id="cameraResult" style="display:none;width:100%;">
+        <div style="background:white;border-radius:14px;border:0.5px solid var(--color-border-tertiary);padding:14px;margin-bottom:10px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+            <i class="ti ti-photo" style="font-size:18px;color:#1D9E75;"></i>
+            <p style="font-size:12px;color:var(--color-text-secondary);">Photo analyzed</p>
+          </div>
+          <p style="font-size:13px;line-height:1.5;color:var(--color-text-primary);" id="cameraText"></p>
+        </div>
+        <p style="font-size:12px;color:var(--color-text-tertiary);text-align:center;">Try taking another photo</p>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:10px;">
+        <div class="query-chip" onclick="cameraQuery('medicine')">💊 Medicine label</div>
+        <div class="query-chip" onclick="cameraQuery('bill')">📄 Electricity bill</div>
+        <div class="query-chip" onclick="cameraQuery('food')">🍛 Food item</div>
+        <div class="query-chip" onclick="cameraQuery('plant')">🌿 Plant/flower</div>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <button class="nav-btn" onclick="goTo('screen-home')"><i class="ti ti-home"></i>Home</button>
+      <button class="nav-btn"><i class="ti ti-microphone"></i>Voice</button>
+      <button class="nav-btn" onclick="goTo('screen-reminders')"><i class="ti ti-bell"></i>Remind</button>
+      <button class="nav-btn" onclick="goTo('screen-emergency')"><i class="ti ti-sos"></i>Safety</button>
+    </div>
+  </div>
+
+  <div id="screen-reminders" class="screen">
+    <div class="status-bar"><span>9:41</span><span><i class="ti ti-battery-2" style="font-size:13px"></i></span></div>
+    <div class="app-header">
+      <button class="back-btn" onclick="goTo('screen-home')"><i class="ti ti-arrow-left" style="font-size:16px"></i> My Reminders</button>
+      <p style="font-size:11px;opacity:0.8;">నా గుర్తింపులు</p>
+    </div>
+    <div class="screen-body">
+      <p class="section-title">Today</p>
+      <div class="reminder-item">
+        <div class="reminder-dot green"></div>
+        <div class="reminder-info"><h4>Morning medicine 💊</h4><p>తెల్లవారు జామున మందు</p></div>
+        <span class="reminder-time">8:00 AM</span>
+      </div>
+      <div class="reminder-item">
+        <div class="reminder-dot amber"></div>
+        <div class="reminder-info"><h4>Electricity bill due ⚡</h4><p>విద్యుత్ బిల్లు చెల్లింపు</p></div>
+        <span class="reminder-time">Today</span>
+      </div>
+      <div class="reminder-item">
+        <div class="reminder-dot green"></div>
+        <div class="reminder-info"><h4>Evening walk 🚶</h4><p>సాయంత్రం నడక</p></div>
+        <span class="reminder-time">6:30 PM</span>
+      </div>
+      <div class="reminder-item">
+        <div class="reminder-dot green"></div>
+        <div class="reminder-info"><h4>Night medicine 💊</h4><p>రాత్రి మందు</p></div>
+        <span class="reminder-time">8:00 PM</span>
+      </div>
+      <p class="section-title" style="margin-top:14px;">Upcoming</p>
+      <div class="reminder-item">
+        <div class="reminder-dot red"></div>
+        <div class="reminder-info"><h4>Water bill due 💧</h4><p>నీళ్ళ బిల్లు – Due in 2 days</p></div>
+        <span class="reminder-time">Jun 27</span>
+      </div>
+      <div class="reminder-item">
+        <div class="reminder-dot amber"></div>
+        <div class="reminder-info"><h4>Doctor appointment 🏥</h4><p>డాక్టర్ అపాయింట్మెంట్</p></div>
+        <span class="reminder-time">Jun 30</span>
+      </div>
+      <button onclick="addReminder()" style="width:100%;background:#0F6E56;border:none;border-radius:12px;color:white;padding:14px;font-size:14px;font-family:var(--font-sans);cursor:pointer;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:8px;"><i class="ti ti-plus" style="font-size:18px;"></i> Add reminder</button>
+    </div>
+    <div class="bottom-nav">
+      <button class="nav-btn" onclick="goTo('screen-home')"><i class="ti ti-home"></i>Home</button>
+      <button class="nav-btn" onclick="goTo('screen-voice')"><i class="ti ti-microphone"></i>Voice</button>
+      <button class="nav-btn active"><i class="ti ti-bell"></i>Remind</button>
+      <button class="nav-btn" onclick="goTo('screen-emergency')"><i class="ti ti-sos"></i>Safety</button>
+    </div>
+  </div>
+
+  <div id="screen-scam" class="screen">
+    <div class="status-bar"><span>9:41</span><span><i class="ti ti-battery-2" style="font-size:13px"></i></span></div>
+    <div class="app-header">
+      <button class="back-btn" onclick="goTo('screen-home')"><i class="ti ti-arrow-left" style="font-size:16px"></i> Scam Alert</button>
+      <p style="font-size:11px;opacity:0.8;">మోసం గుర్తింపు</p>
+    </div>
+    <div class="screen-body">
+      <div style="background:#FAEEDA;border-radius:14px;padding:12px 14px;margin-bottom:14px;border:0.5px solid #FAC775;">
+        <p style="font-size:12px;color:#633806;line-height:1.5;"><i class="ti ti-info-circle" style="font-size:14px;vertical-align:-2px;margin-right:4px;"></i>Paste any suspicious SMS or WhatsApp message below to check if it's a scam.</p>
+      </div>
+      <div class="scam-input-area">
+        <textarea id="scamInput" rows="5" placeholder="Paste message here...&#10;&#10;ఇక్కడ మెసేజ్ పేస్ట్ చేయండి..."></textarea>
+      </div>
+      <button class="analyze-btn" onclick="analyzeScam()">🔍 Analyze Message &nbsp;·&nbsp; విశ్లేషించండి</button>
+      <div class="scam-result" id="scamResult"></div>
+      <p class="section-title" style="margin-top:16px;">Common scam examples</p>
+      <div class="query-chip" style="display:block;margin-bottom:8px;border-radius:10px;padding:10px 12px;cursor:pointer;" onclick="pasteScam('URGENT: Your bank account will be blocked. Click here to verify: bit.ly/3xfake99')">📱 Fake bank alert SMS</div>
+      <div class="query-chip" style="display:block;margin-bottom:8px;border-radius:10px;padding:10px 12px;cursor:pointer;" onclick="pasteScam('Congratulations! You won ₹5,00,000. Send OTP 123456 to claim your prize now!')">🎁 Lottery scam</div>
+      <div class="query-chip" style="display:block;margin-bottom:8px;border-radius:10px;padding:10px 12px;cursor:pointer;" onclick="pasteScam('Hi, I am calling from TRAI. Your number will be disconnected in 2 hours. Press 9 now.')">📞 TRAI impersonation</div>
+    </div>
+    <div class="bottom-nav">
+      <button class="nav-btn" onclick="goTo('screen-home')"><i class="ti ti-home"></i>Home</button>
+      <button class="nav-btn" onclick="goTo('screen-voice')"><i class="ti ti-microphone"></i>Voice</button>
+      <button class="nav-btn" onclick="goTo('screen-reminders')"><i class="ti ti-bell"></i>Remind</button>
+      <button class="nav-btn" onclick="goTo('screen-emergency')"><i class="ti ti-sos"></i>Safety</button>
+    </div>
+  </div>
+
+  <div id="screen-emergency" class="screen">
+    <div class="status-bar"><span>9:41</span><span><i class="ti ti-battery-2" style="font-size:13px"></i></span></div>
+    <div class="app-header">
+      <button class="back-btn" onclick="goTo('screen-home')"><i class="ti ti-arrow-left" style="font-size:16px"></i> Family Safety</button>
+      <p style="font-size:11px;opacity:0.8;">అత్యవసర సహాయం</p>
+    </div>
+    <div class="screen-body">
+      <button class="emergency-btn" onclick="sendSOS()"><i class="ti ti-sos" style="font-size:22px;"></i> Send SOS to Family &nbsp;·&nbsp; SOS పంపండి</button>
+      <button class="emergency-btn secondary" onclick="callEmergency()"><i class="ti ti-phone-call" style="font-size:20px;"></i> Call 112 Emergency</button>
+      <button class="emergency-btn tertiary" onclick="shareLocation()"><i class="ti ti-map-pin" style="font-size:20px;"></i> Share My Location</button>
+      <p class="section-title" style="margin-top:6px;">Family Members</p>
+      <div class="family-member">
+        <div class="avatar" style="background:#E1F5EE;color:#085041;">రవి</div>
+        <div style="flex:1;"><p style="font-size:13px;font-weight:500;">Ravi (Son)</p><p style="font-size:11px;color:var(--color-text-secondary);">+91 98765 43210</p></div>
+        <i class="ti ti-phone" style="font-size:20px;color:#0F6E56;cursor:pointer;" onclick="showToast('Calling Ravi...')"></i>
+      </div>
+      <div class="family-member">
+        <div class="avatar" style="background:#E6F1FB;color:#042C53;">ప్రియ</div>
+        <div style="flex:1;"><p style="font-size:13px;font-weight:500;">Priya (Daughter)</p><p style="font-size:11px;color:var(--color-text-secondary);">+91 87654 32109</p></div>
+        <i class="ti ti-phone" style="font-size:20px;color:#0F6E56;cursor:pointer;" onclick="showToast('Calling Priya...')"></i>
+      </div>
+      <div class="family-member">
+        <div class="avatar" style="background:#FAEEDA;color:#412402;">అమ్మ</div>
+        <div style="flex:1;"><p style="font-size:13px;font-weight:500;">Amma (Mother)</p><p style="font-size:11px;color:var(--color-text-secondary);">+91 76543 21098</p></div>
+        <i class="ti ti-phone" style="font-size:20px;color:#0F6E56;cursor:pointer;" onclick="showToast('Calling Amma...')"></i>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <button class="nav-btn" onclick="goTo('screen-home')"><i class="ti ti-home"></i>Home</button>
+      <button class="nav-btn" onclick="goTo('screen-voice')"><i class="ti ti-microphone"></i>Voice</button>
+      <button class="nav-btn" onclick="goTo('screen-reminders')"><i class="ti ti-bell"></i>Remind</button>
+      <button class="nav-btn active"><i class="ti ti-sos"></i>Safety</button>
+    </div>
+  </div>
+
+  <div id="screen-plans" class="screen">
+    <div class="status-bar"><span>9:41</span><span><i class="ti ti-battery-2" style="font-size:13px"></i></span></div>
+    <div class="app-header">
+      <button class="back-btn" onclick="goTo('screen-home')"><i class="ti ti-arrow-left" style="font-size:16px"></i> Plans</button>
+      <p style="font-size:11px;opacity:0.8;">మీ ప్లాన్ ఎంచుకోండి</p>
+    </div>
+    <div class="screen-body">
+      <div class="plan-card">
+        <p style="font-size:14px;font-weight:500;margin-bottom:8px;">Free</p>
+        <p class="plan-price">₹0 <span>/ forever</span></p>
+        <div class="plan-feature"><i class="ti ti-check"></i> 20 questions per day</div>
+        <div class="plan-feature"><i class="ti ti-check"></i> Voice & camera AI</div>
+        <div class="plan-feature"><i class="ti ti-check"></i> Basic reminders</div>
+        <div class="plan-feature"><i class="ti ti-check"></i> Scam detection (3/day)</div>
+        <button style="width:100%;background:none;border:0.5px solid var(--color-border-secondary);border-radius:10px;padding:12px;margin-top:14px;font-size:13px;cursor:pointer;font-family:var(--font-sans);">Current Plan</button>
+      </div>
+      <div class="plan-card featured">
+        <span class="plan-badge">⭐ Most Popular</span>
+        <p style="font-size:14px;font-weight:500;margin-bottom:8px;">Premium</p>
+        <p class="plan-price">₹99 <span>/ month</span></p>
+        <div class="plan-feature"><i class="ti ti-check"></i> Unlimited questions</div>
+        <div class="plan-feature"><i class="ti ti-check"></i> Advanced AI responses</div>
+        <div class="plan-feature"><i class="ti ti-check"></i> Family safety network</div>
+        <div class="plan-feature"><i class="ti ti-check"></i> Bill reading & tracking</div>
+        <div class="plan-feature"><i class="ti ti-check"></i> Unlimited scam alerts</div>
+        <div class="plan-feature"><i class="ti ti-check"></i> Priority Telugu support</div>
+        <button onclick="showToast('Redirecting to payment...')" style="width:100%;background:#0F6E56;border:none;border-radius:10px;color:white;padding:12px;margin-top:14px;font-size:13px;cursor:pointer;font-family:var(--font-sans);">Upgrade to Premium →</button>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <button class="nav-btn" onclick="goTo('screen-home')"><i class="ti ti-home"></i>Home</button>
+      <button class="nav-btn" onclick="goTo('screen-voice')"><i class="ti ti-microphone"></i>Voice</button>
+      <button class="nav-btn" onclick="goTo('screen-reminders')"><i class="ti ti-bell"></i>Remind</button>
+      <button class="nav-btn" onclick="goTo('screen-emergency')"><i class="ti ti-sos"></i>Safety</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<p style="text-align:center;font-size:12px;color:var(--color-text-tertiary);margin-top:10px;">Interactive prototype · Tap any feature to explore</p>
+</div>
+
+<script>
+function goTo(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+let recording = false;
+function toggleRecording() {
+  recording = !recording;
+  const btn = document.getElementById('micBtn');
+  const inner = document.getElementById('micInner');
+  const label = document.getElementById('voiceLabel');
+  if (recording) {
+    btn.classList.add('recording');
+    inner.classList.add('recording');
+    label.innerHTML = 'Listening...<br><span style="font-size:12px;color:var(--color-text-tertiary)">వింటున్నాను...</span>';
+    setTimeout(() => {
+      recording = false;
+      btn.classList.remove('recording');
+      inner.classList.remove('recording');
+      label.innerHTML = 'Tap to speak<br><span style="font-size:12px;color:var(--color-text-tertiary)">మాట్లాడడానికి నొక్కండి</span>';
+      simulateQuery('రాత్రి 8 గంటలకు మందు గుర్తు చేయి');
+    }, 2000);
+  }
+}
+const voiceReplies = {
+  'Remind me medicine at 8 PM': '✅ Reminder set! I\'ll remind you to take your medicine at 8:00 PM tonight.\n\nరాత్రి 8:00 కి మందు రిమైండర్ సెట్ చేయబడింది.',
+  'What is my electricity bill?': '⚡ Your APSPDCL bill for May is ₹1,240. Due date: June 27. Would you like a payment reminder?\n\nమీ విద్యుత్ బిల్లు ₹1,240. చెల్లింపు తేదీ: జూన్ 27.',
+  'Call my daughter': '📞 Calling Priya...\n\nప్రియకు కాల్ చేస్తున్నాను...',
+  "What is today's weather?": '🌤 Hyderabad today: 36°C, partly cloudy. Humidity 68%. Carry water!\n\nహైదరాబాద్: 36°C, పాక్షిక మేఘాలు. నీళ్ళు తీసుకెళ్ళండి!',
+  'రాత్రి 8 గంటలకు మందు గుర్తు చేయి': '✅ రాత్రి 8 గంటలకు మందు రిమైండర్ సెట్ చేయబడింది!\n\nMedicine reminder set for 8:00 PM tonight.'
+};
+function simulateQuery(q) {
+  const el = document.getElementById('voiceResponse');
+  document.getElementById('userSaid').textContent = q;
+  document.getElementById('assistantReply').textContent = voiceReplies[q] || '✅ Got it! I\'ll help with "' + q + '".\n\nసరే, నేను సహాయం చేస్తాను!';
+  el.classList.add('show');
+  goTo('screen-voice');
+}
+const cameraReplies = {
+  medicine: '💊 This appears to be Metformin 500mg (diabetes medication). \n\nDosage: 1 tablet twice daily with meals.\n\nతర్వాత భోజనంతో 2 సార్లు తీసుకోవాలి.',
+  bill: '📄 APSPDCL Electricity Bill detected!\n\nAmount due: ₹1,240\nDue date: June 27, 2026\nConsumer No: 123456789\n\nWould you like to set a payment reminder?',
+  food: '🍛 This looks like Hyderabadi Biryani! Rich in carbs and protein. Estimated calories: ~450 per serving.\n\nహైదరాబాది బిర్యానీ గుర్తించబడింది!',
+  plant: '🌿 This appears to be Tulasi (Holy Basil). Medicinal uses: cold relief, stress reduction, immunity boost.\n\nఇది తులసి మొక్క. జలుబుకు, రోగనిరోధక శక్తికి మంచిది.'
+};
+function simulateCamera() { cameraQuery('food'); }
+function cameraQuery(type) {
+  const r = document.getElementById('cameraResult');
+  document.getElementById('cameraText').textContent = cameraReplies[type];
+  r.style.display = 'block';
+}
+function analyzeScam() {
+  const msg = document.getElementById('scamInput').value.trim();
+  const el = document.getElementById('scamResult');
+  if (!msg) { showToast('Please paste a message first'); return; }
+  const scamWords = ['otp','click here','won','prize','blocked','verify','trai','claim','urgent','bit.ly','lottery'];
+  const lower = msg.toLowerCase();
+  const isScam = scamWords.some(w => lower.includes(w));
+  el.className = 'scam-result show ' + (isScam ? 'danger' : 'safe');
+  if (isScam) {
+    el.innerHTML = '<h4>⚠️ HIGH SCAM RISK · మోసం అవకాశం అధికం</h4><p>This message shows multiple signs of a scam: suspicious links, urgency, or prize claims. Do NOT click links or share OTP.<br><br>ఈ మెసేజ్‌లో మోసపు సంకేతాలు ఉన్నాయి. లింక్‌పై క్లిక్ చేయవద్దు.</p>';
+  } else {
+    el.innerHTML = '<h4>✅ Looks Safe · సురక్షితంగా ఉంది</h4><p>No obvious scam patterns detected. However, always be cautious with unknown senders.<br><br>స్పష్టమైన మోసపు సంకేతాలు కనబడలేదు. అయినా జాగ్రత్తగా ఉండండి.</p>';
+  }
+}
+function pasteScam(msg) {
+  document.getElementById('scamInput').value = msg;
+  analyzeScam();
+}
+function sendSOS() { showToast('🚨 SOS sent to 3 family members!'); }
+function callEmergency() { showToast('Calling 112 Emergency...'); }
+function shareLocation() { showToast('📍 Location shared with family!'); }
+function addReminder() { showToast('✅ Voice reminder added!'); }
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+</script>
